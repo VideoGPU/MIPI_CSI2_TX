@@ -1,4 +1,5 @@
-# MIPI_CSI2_TX
-VHDL code for using Xilinx MGT gigabit transceivers/LVDS lines for MIPI CSI-2 TX  protocol.
+# MIPI_CSI2_TX 
+# WORK IN PROGRESS
+VHDL code for using Xilnx LVDS lines for MIPI CSI-2 TX  protocol.
+For educational purposes
 
-Copyright: free for non-commercial use. Please contact michael@videogpu.com for commercial licence.

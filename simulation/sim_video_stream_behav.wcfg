@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="sim_video_stream_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="\$unit_1 " />
+            <top_module name="common" />
+            <top_module name="glbl" />
+            <top_module name="sim_video_stream" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="100000000001fs"></ZoomEndTime>
+      <Cursor1Time time="9550562000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="175"></NameColumnWidth>
+      <ValueColumnWidth column_width="148"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="66" />
+   <wvobject type="logic" fp_name="/sim_video_stream/sys_clk_p">
+      <obj_property name="ElementShortName">sys_clk_p</obj_property>
+      <obj_property name="ObjectShortName">sys_clk_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/sys_clk_n">
+      <obj_property name="ElementShortName">sys_clk_n</obj_property>
+      <obj_property name="ObjectShortName">sys_clk_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/i2c3_cam_clk">
+      <obj_property name="ElementShortName">i2c3_cam_clk</obj_property>
+      <obj_property name="ObjectShortName">i2c3_cam_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/monitor_1p2v">
+      <obj_property name="ElementShortName">monitor_1p2v</obj_property>
+      <obj_property name="ObjectShortName">monitor_1p2v</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/i2c2_cam_clk">
+      <obj_property name="ElementShortName">i2c2_cam_clk</obj_property>
+      <obj_property name="ObjectShortName">i2c2_cam_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/i2c3_cam_dat">
+      <obj_property name="ElementShortName">i2c3_cam_dat</obj_property>
+      <obj_property name="ObjectShortName">i2c3_cam_dat</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/switch_data_lanes_vadj">
+      <obj_property name="ElementShortName">switch_data_lanes_vadj</obj_property>
+      <obj_property name="ObjectShortName">switch_data_lanes_vadj</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/switch_clock_lanes_vadj">
+      <obj_property name="ElementShortName">switch_clock_lanes_vadj</obj_property>
+      <obj_property name="ObjectShortName">switch_clock_lanes_vadj</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/i2c_cam_dat">
+      <obj_property name="ElementShortName">i2c_cam_dat</obj_property>
+      <obj_property name="ObjectShortName">i2c_cam_dat</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/i2c_cam_clk">
+      <obj_property name="ElementShortName">i2c_cam_clk</obj_property>
+      <obj_property name="ObjectShortName">i2c_cam_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/monitor_1p8v">
+      <obj_property name="ElementShortName">monitor_1p8v</obj_property>
+      <obj_property name="ObjectShortName">monitor_1p8v</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/cam0_rst">
+      <obj_property name="ElementShortName">cam0_rst</obj_property>
+      <obj_property name="ObjectShortName">cam0_rst</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/cam0_pwr">
+      <obj_property name="ElementShortName">cam0_pwr</obj_property>
+      <obj_property name="ObjectShortName">cam0_pwr</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/cam0_mclk">
+      <obj_property name="ElementShortName">cam0_mclk</obj_property>
+      <obj_property name="ObjectShortName">cam0_mclk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/monitor_2p8v">
+      <obj_property name="ElementShortName">monitor_2p8v</obj_property>
+      <obj_property name="ObjectShortName">monitor_2p8v</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/monitor_3p3v">
+      <obj_property name="ElementShortName">monitor_3p3v</obj_property>
+      <obj_property name="ObjectShortName">monitor_3p3v</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/i2c2_cam_dat">
+      <obj_property name="ElementShortName">i2c2_cam_dat</obj_property>
+      <obj_property name="ObjectShortName">i2c2_cam_dat</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/en_mipi_out_data_vadj">
+      <obj_property name="ElementShortName">en_mipi_out_data_vadj</obj_property>
+      <obj_property name="ObjectShortName">en_mipi_out_data_vadj</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/en_mipi_out_clock_vadj">
+      <obj_property name="ElementShortName">en_mipi_out_clock_vadj</obj_property>
+      <obj_property name="ObjectShortName">en_mipi_out_clock_vadj</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/enn_jt_gpio_input">
+      <obj_property name="ElementShortName">enn_jt_gpio_input</obj_property>
+      <obj_property name="ObjectShortName">enn_jt_gpio_input</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/gpio17_out">
+      <obj_property name="ElementShortName">gpio17_out</obj_property>
+      <obj_property name="ObjectShortName">gpio17_out</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/gpio9_out">
+      <obj_property name="ElementShortName">gpio9_out</obj_property>
+      <obj_property name="ObjectShortName">gpio9_out</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_c_d1_p">
+      <obj_property name="ElementShortName">hs_c_d1_p</obj_property>
+      <obj_property name="ObjectShortName">hs_c_d1_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_c_d1_n">
+      <obj_property name="ElementShortName">hs_c_d1_n</obj_property>
+      <obj_property name="ObjectShortName">hs_c_d1_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_c_d0_p">
+      <obj_property name="ElementShortName">hs_c_d0_p</obj_property>
+      <obj_property name="ObjectShortName">hs_c_d0_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_c_d0_n">
+      <obj_property name="ElementShortName">hs_c_d0_n</obj_property>
+      <obj_property name="ObjectShortName">hs_c_d0_n</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/sim_video_stream/inst_fmc_mipi_top/frame_gen/line_counter_reg">
+      <obj_property name="ElementShortName">line_counter_reg[12:0]</obj_property>
+      <obj_property name="ObjectShortName">line_counter_reg[12:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_c_d1_p">
+      <obj_property name="ElementShortName">lp_c_d1_p</obj_property>
+      <obj_property name="ObjectShortName">lp_c_d1_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_c_d1_n">
+      <obj_property name="ElementShortName">lp_c_d1_n</obj_property>
+      <obj_property name="ObjectShortName">lp_c_d1_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_c_d0_p">
+      <obj_property name="ElementShortName">lp_c_d0_p</obj_property>
+      <obj_property name="ObjectShortName">lp_c_d0_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_c_d0_n">
+      <obj_property name="ElementShortName">lp_c_d0_n</obj_property>
+      <obj_property name="ObjectShortName">lp_c_d0_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_c_clk_p">
+      <obj_property name="ElementShortName">lp_c_clk_p</obj_property>
+      <obj_property name="ObjectShortName">lp_c_clk_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_c_clk_n">
+      <obj_property name="ElementShortName">lp_c_clk_n</obj_property>
+      <obj_property name="ObjectShortName">lp_c_clk_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_d_d1_p">
+      <obj_property name="ElementShortName">hs_d_d1_p</obj_property>
+      <obj_property name="ObjectShortName">hs_d_d1_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_d_d1_n">
+      <obj_property name="ElementShortName">hs_d_d1_n</obj_property>
+      <obj_property name="ObjectShortName">hs_d_d1_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_d_d0_p">
+      <obj_property name="ElementShortName">hs_d_d0_p</obj_property>
+      <obj_property name="ObjectShortName">hs_d_d0_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_d_d0_n">
+      <obj_property name="ElementShortName">hs_d_d0_n</obj_property>
+      <obj_property name="ObjectShortName">hs_d_d0_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_d_clk_p">
+      <obj_property name="ElementShortName">hs_d_clk_p</obj_property>
+      <obj_property name="ObjectShortName">hs_d_clk_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_d_clk_n">
+      <obj_property name="ElementShortName">hs_d_clk_n</obj_property>
+      <obj_property name="ObjectShortName">hs_d_clk_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_c_clk_p">
+      <obj_property name="ElementShortName">hs_c_clk_p</obj_property>
+      <obj_property name="ObjectShortName">hs_c_clk_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/hs_c_clk_n">
+      <obj_property name="ElementShortName">hs_c_clk_n</obj_property>
+      <obj_property name="ObjectShortName">hs_c_clk_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_d_d1_p">
+      <obj_property name="ElementShortName">lp_d_d1_p</obj_property>
+      <obj_property name="ObjectShortName">lp_d_d1_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_d_d1_n">
+      <obj_property name="ElementShortName">lp_d_d1_n</obj_property>
+      <obj_property name="ObjectShortName">lp_d_d1_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_d_d0_p">
+      <obj_property name="ElementShortName">lp_d_d0_p</obj_property>
+      <obj_property name="ObjectShortName">lp_d_d0_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_d_d0_n">
+      <obj_property name="ElementShortName">lp_d_d0_n</obj_property>
+      <obj_property name="ObjectShortName">lp_d_d0_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_d_clk_p">
+      <obj_property name="ElementShortName">lp_d_clk_p</obj_property>
+      <obj_property name="ObjectShortName">lp_d_clk_p</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/lp_d_clk_n">
+      <obj_property name="ElementShortName">lp_d_clk_n</obj_property>
+      <obj_property name="ObjectShortName">lp_d_clk_n</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/sim_video_stream/leds_debug">
+      <obj_property name="ElementShortName">leds_debug[7:0]</obj_property>
+      <obj_property name="ObjectShortName">leds_debug[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/dbg_io_1">
+      <obj_property name="ElementShortName">dbg_io_1</obj_property>
+      <obj_property name="ObjectShortName">dbg_io_1</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/dbg_io_2">
+      <obj_property name="ElementShortName">dbg_io_2</obj_property>
+      <obj_property name="ObjectShortName">dbg_io_2</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/dbg_io_3">
+      <obj_property name="ElementShortName">dbg_io_3</obj_property>
+      <obj_property name="ObjectShortName">dbg_io_3</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/GPIO_SW_N">
+      <obj_property name="ElementShortName">GPIO_SW_N</obj_property>
+      <obj_property name="ObjectShortName">GPIO_SW_N</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/GPIO_SW_E">
+      <obj_property name="ElementShortName">GPIO_SW_E</obj_property>
+      <obj_property name="ObjectShortName">GPIO_SW_E</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/GPIO_SW_S">
+      <obj_property name="ElementShortName">GPIO_SW_S</obj_property>
+      <obj_property name="ObjectShortName">GPIO_SW_S</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/GPIO_SW_W">
+      <obj_property name="ElementShortName">GPIO_SW_W</obj_property>
+      <obj_property name="ObjectShortName">GPIO_SW_W</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/GPIO_SW_C">
+      <obj_property name="ElementShortName">GPIO_SW_C</obj_property>
+      <obj_property name="ObjectShortName">GPIO_SW_C</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/pixel_clk">
+      <obj_property name="ElementShortName">pixel_clk</obj_property>
+      <obj_property name="ObjectShortName">pixel_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/sys_rst">
+      <obj_property name="ElementShortName">sys_rst</obj_property>
+      <obj_property name="ObjectShortName">sys_rst</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/rx_rst">
+      <obj_property name="ElementShortName">rx_rst</obj_property>
+      <obj_property name="ObjectShortName">rx_rst</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/sim_video_stream/o_valid">
+      <obj_property name="ElementShortName">o_valid</obj_property>
+      <obj_property name="ObjectShortName">o_valid</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/sim_video_stream/o_add">
+      <obj_property name="ElementShortName">o_add[7:0]</obj_property>
+      <obj_property name="ObjectShortName">o_add[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/sim_video_stream/tst">
+      <obj_property name="ElementShortName">tst[15:0]</obj_property>
+      <obj_property name="ObjectShortName">tst[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/sim_video_stream/N_MIPI_LANES">
+      <obj_property name="ElementShortName">N_MIPI_LANES</obj_property>
+      <obj_property name="ObjectShortName">N_MIPI_LANES</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/sim_video_stream/SERDES_DATA_WIDTH">
+      <obj_property name="ElementShortName">SERDES_DATA_WIDTH</obj_property>
+      <obj_property name="ObjectShortName">SERDES_DATA_WIDTH</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/sim_video_stream/clk_period">
+      <obj_property name="ElementShortName">clk_period</obj_property>
+      <obj_property name="ObjectShortName">clk_period</obj_property>
+   </wvobject>
+</wave_config>
