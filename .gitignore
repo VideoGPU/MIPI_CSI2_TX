@@ -13,19 +13,12 @@ simulation/verilator/obj_dir/
 #python junk
 simulation/verilator/dev3.8/
 
-#DISABLED Ignore all generated files in Xilinx's IP project except necessary ones
-#XilinxIPs/clock_wizard/clk_wiz_v5_3_0/
-#XilinxIPs/clock_wizard/clk_wiz_v5_3_0/*
-#XilinxIPs/clock_wizard/*.dcp
-#XilinxIPs/clock_wizard/*.v
-#XilinxIPs/clock_wizard/*.xdc
-#XilinxIPs/clock_wizard/*.vhdl
-#XilinxIPs/selectio_serdes/*.dcp
-#XilinxIPs/selectio_serdes/*.v
-#XilinxIPs/selectio_serdes/*.xdc
-#XilinxIPs/selectio_serdes/*.vhdl
-#XilinxIPs/clock_wizard/*.xml
-#XilinxIPs/selectio_serdes/*.xml
+#Ignore generated files in Xilinx's IP project except necessary ones
+XilinxIPs/clock_wizard/clock_wizard.xml
+XilinxIPs/clock_wizard/clock_wizard_sim_netlist.v
+XilinxIPs/clock_wizard/clock_wizard_sim_netlist.vhdl
+XilinxIPs/clock_wizard/clock_wizard_stub.v
+XilinxIPs/clock_wizard/clock_wizard_stub.vhdl
 
 
 
