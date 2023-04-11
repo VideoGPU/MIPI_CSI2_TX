@@ -33,7 +33,8 @@ use UNISIM.VComponents.all;
 
 entity fmc_mipi_top is     Generic (	
         N_MIPI_LANES : integer := 2;
-        SERDES_DATA_WIDTH : integer := 8
+        SERDES_DATA_WIDTH : integer := 8;
+        ADD_DEBUG_OVERLAY : integer := 1 --If 1 , adds a vertical line overly across the frame, to indicate line numbers on display
     );
    Port ( 
    sys_clk_p : in std_logic;  --AD12 SYSCLK_P;
@@ -150,7 +151,8 @@ END COMPONENT;
 
 COMPONENT send_single_frame is
     Generic (	
-        N_MIPI_LANES : integer := N_MIPI_LANES
+        N_MIPI_LANES : integer := N_MIPI_LANES;
+        ADD_DEBUG_OVERLAY : integer := ADD_DEBUG_OVERLAY
     );
     Port (
         clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
@@ -372,7 +374,8 @@ PORT MAP(clk =>  clk_slow_counter,
 --Instantiate the Frame stream generator 
 frame_gen: send_single_frame  
      GENERIC MAP(    
-       N_MIPI_LANES => N_MIPI_LANES --number of MIPI CSI lanes currently only 2 implemented
+       N_MIPI_LANES => N_MIPI_LANES, --number of MIPI CSI lanes currently only 2 implemented
+       ADD_DEBUG_OVERLAY => ADD_DEBUG_OVERLAY
      )
      PORT MAP(
      clk => clk_50MHz,

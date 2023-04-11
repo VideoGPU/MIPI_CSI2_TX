@@ -39,7 +39,8 @@ entity send_single_frame is
         LINE_CONTER_WIDTH : integer := 13; --bits width of line counter, 13 bit means max value for N_LINES = 8191
         PIXELS_PER_LINE : integer := 3240;--64;--3240;
         N_LINES : integer := 1944;-- 4;--1944;
-        CLOCK_KHZ_LP : integer := 100000 --clock rate in KHz
+        CLOCK_KHZ_LP : integer := 100000; --clock rate in KHz
+        ADD_DEBUG_OVERLAY : integer := 1
     );
     Port (
         clk : in std_logic; --data in/out clock HS clock,every clock cicle prepare one byte of HS stream, per lane
@@ -246,7 +247,8 @@ begin
 Colorbar_generator : colorbar_line_generator_raw10
     Generic Map(	
     N_MIPI_LANES => N_MIPI_LANES,
-    PIXELS_8BIT_PER_LINE => PIXELS_PER_LINE-- Test vector is 3240 bytes length;
+    PIXELS_8BIT_PER_LINE => PIXELS_PER_LINE,-- Test vector is 3240 bytes length;
+    ADD_DEBUG_OVERLAY => ADD_DEBUG_OVERLAY
     )
     Port Map(
     clk => clk, --every clock sends video_data_out 

@@ -36,7 +36,8 @@ use UNISIM.VComponents.all;
 
 entity sim_video_stream is Generic (	
         N_MIPI_LANES : integer := 2;
-        SERDES_DATA_WIDTH : integer := 8
+        SERDES_DATA_WIDTH : integer := 8;
+        ADD_DEBUG_OVERLAY : integer := 0 --We don't add overlay on simulation
     );
 --  Port ( );
 end sim_video_stream;
@@ -45,7 +46,8 @@ architecture Behavioral of sim_video_stream is
 
 COMPONENT fmc_mipi_top is     Generic (	
         N_MIPI_LANES : integer := N_MIPI_LANES;
-        SERDES_DATA_WIDTH : integer := SERDES_DATA_WIDTH
+        SERDES_DATA_WIDTH : integer := SERDES_DATA_WIDTH;
+        ADD_DEBUG_OVERLAY : integer := ADD_DEBUG_OVERLAY
     );
    Port ( 
    sys_clk_p : in std_logic;  --AD12 SYSCLK_P
@@ -288,7 +290,8 @@ sys_clk_n <= not clk;
 inst_fmc_mipi_top:  fmc_mipi_top      
     Generic Map (	
         N_MIPI_LANES => N_MIPI_LANES,
-        SERDES_DATA_WIDTH => SERDES_DATA_WIDTH
+        SERDES_DATA_WIDTH => SERDES_DATA_WIDTH,
+        ADD_DEBUG_OVERLAY => ADD_DEBUG_OVERLAY
     )
    Port map( 
     sys_clk_p => sys_clk_p,

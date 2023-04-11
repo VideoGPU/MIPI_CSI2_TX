@@ -125,11 +125,11 @@ line_send_fsmd : process(pattern_state_reg,pixel_counter_reg,hs_active,line_nume
           when PS_TRANSMIT =>
                                
                 if (line_numer = '0') then
-                    video_data_out(15 downto 8) <=  line_1(to_integer(pixel_counter_reg - 10*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))) + 1);
-                    video_data_out(7 downto 0)  <=  line_1(to_integer(pixel_counter_reg - 10*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))));
+                    video_data_out(15 downto 8) <=  line_1(to_integer(pixel_counter_reg - 10*ADD_DEBUG_OVERLAY*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))) + 1);
+                    video_data_out(7 downto 0)  <=  line_1(to_integer(pixel_counter_reg - 10*ADD_DEBUG_OVERLAY*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))));
                 else
-                    video_data_out(15 downto 8) <=  line_2(to_integer(pixel_counter_reg - 10*overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0)) + 1 );
-                    video_data_out(7 downto 0)  <=  line_2(to_integer(pixel_counter_reg - 10*overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0)));               
+                    video_data_out(15 downto 8) <=  line_2(to_integer(pixel_counter_reg - 10*ADD_DEBUG_OVERLAY*overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0)) + 1 );
+                    video_data_out(7 downto 0)  <=  line_2(to_integer(pixel_counter_reg - 10*ADD_DEBUG_OVERLAY*overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0)));               
                 end if;
                 
                 --TODO: fix it,very confusing + code duplication
