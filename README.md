@@ -13,6 +13,21 @@ I2C slave code is from https://github.com/tirfil/VhdI2CSlave repo.
 
 For educational purposes.
 
+## Install notes:
+*Clone the repo
+
+git clone git@github.com:VideoGPU/MIPI_CSI2_TX.git
+
+*Inside Vivado Tcl console,navigate to the repo dir. In my case it was
+
+cd /home/videogpu/MIPI_CSI2_TX
+
+*Run the installation script
+source csi_tx.tcl
+
+It will create a ready to use project for Kintex-7 KC705 evaluation board.
+Now you can generate a bitstream, or run the simulation. 
+
 ## Some pictures:
 Terminal output:
 ![Alt text](https://github.com/VideoGPU/MIPI_CSI2_TX/blob/master/pictures/terminal_output.jpg?raw=true)
