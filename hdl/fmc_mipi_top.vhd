@@ -32,8 +32,7 @@ library UNISIM;
 use UNISIM.VComponents.all;
 
 entity fmc_mipi_top is     Generic (	
-        N_MIPI_LANES : integer := 2;
-        SERDES_DATA_WIDTH : integer := 8;
+  SERDES_DATA_WIDTH : integer := 8;
         ADD_DEBUG_OVERLAY : integer := 1 --If 1 , adds a vertical line overly across the frame, to indicate line numbers on display
     );
    Port ( 
@@ -49,11 +48,23 @@ entity fmc_mipi_top is     Generic (
     hs_c_d0_p  : out std_logic; --H13, HPC_LA07_P; E28
     hs_c_d0_n  : out std_logic; --H14, HPC_LA07_N; D28
 
+    hs_c_d2_p  : out std_logic;
+    hs_c_d2_n  : out std_logic;
+
+    hs_c_d3_p  : out std_logic;
+    hs_c_d3_n  : out std_logic;
+
     lp_c_d1_p  : out std_logic; --H16, HPC_LA11_P; G27
     lp_c_d1_n  : out std_logic; --H17, HPC_LA11_N; F27
 
     lp_c_d0_p  : out std_logic; --H19, HPC_LA15_P; C24
     lp_c_d0_n  : out std_logic; --H20, HPC_LA15_N; B24
+
+    lp_c_d2_p  : out std_logic;
+    lp_c_d2_n  : out std_logic;
+
+    lp_c_d3_p  : out std_logic;
+    lp_c_d3_n  : out std_logic;
 
     lp_c_clk_p : out std_logic; --H22, HPC_LA19_P; G18
     lp_c_clk_n : out std_logic; --H23, HPC_LA19_N; F18
@@ -108,8 +119,7 @@ END COMPONENT;
 
 COMPONENT send_single_frame is
     Generic (	
-        N_MIPI_LANES : integer := N_MIPI_LANES;
-    PIXELS_PER_LINE_MAX : integer := 3240;
+  PIXELS_PER_LINE_MAX : integer := 3240;
         ADD_DEBUG_OVERLAY : integer := ADD_DEBUG_OVERLAY
     );
     Port (
@@ -118,6 +128,7 @@ COMPONENT send_single_frame is
         clk_DPHY_100Mhz : in std_logic;
         send_frame : in std_logic; --triggers frame sending, one clock cycle is enough  
     stop_frame : in std_logic;
+      cfg_n_mipi_lanes : in std_logic_vector(1 downto 0);
     cfg_pixels_per_line : in std_logic_vector(15 downto 0);
     cfg_n_lines : in std_logic_vector(15 downto 0);
     cfg_vc_num : in std_logic_vector(1 downto 0);
@@ -178,9 +189,12 @@ signal lp_clk_lane  :  std_logic_vector(1 downto 0); --bit 1 = Dp line, bit 0 = 
 signal parallel_data_to_serdes :  STD_LOGIC_VECTOR ( 31 downto 0 ); --parallel data in
 
 --For SelectIO
-signal data_out_to_pins_p : STD_LOGIC_VECTOR ( 1 downto 0 );
-signal data_out_to_pins_n :  STD_LOGIC_VECTOR ( 1 downto 0 );
-signal data_out_from_device : STD_LOGIC_VECTOR (15 downto 0 );
+signal data_out_to_pins_p_01 : STD_LOGIC_VECTOR ( 1 downto 0 );
+signal data_out_to_pins_n_01 :  STD_LOGIC_VECTOR ( 1 downto 0 );
+signal data_out_from_device_01 : STD_LOGIC_VECTOR (15 downto 0 );
+signal data_out_to_pins_p_23 : STD_LOGIC_VECTOR ( 1 downto 0 );
+signal data_out_to_pins_n_23 :  STD_LOGIC_VECTOR ( 1 downto 0 );
+signal data_out_from_device_23 : STD_LOGIC_VECTOR (15 downto 0 );
 
 --AXI control/status
 constant REG_CONTROL_ADDR                 : std_logic_vector(7 downto 0) := x"00";
@@ -197,6 +211,8 @@ constant REG_TLP_SOT_SHORT_DELAY_ADDR     : std_logic_vector(7 downto 0) := x"30
 constant REG_THS_PREPARE_ADDR             : std_logic_vector(7 downto 0) := x"34";
 constant REG_THS_ZERO_ADDR                : std_logic_vector(7 downto 0) := x"38";
 constant REG_THS_EXIT_ADDR                : std_logic_vector(7 downto 0) := x"3C";
+constant REG_N_MIPI_LANES_ADDR            : std_logic_vector(7 downto 0) := x"40";
+constant DEFAULT_N_MIPI_LANES             : std_logic_vector(1 downto 0) := "10";
 
 signal axi_awready_reg : std_logic := '0';
 signal axi_wready_reg  : std_logic := '0';
@@ -220,6 +236,7 @@ signal reg_tlp_sot_short      : std_logic_vector(15 downto 0) := x"030F"; --783
 signal reg_ths_prepare        : std_logic_vector(15 downto 0) := x"000F"; --15
 signal reg_ths_zero           : std_logic_vector(15 downto 0) := x"0050"; --80
 signal reg_ths_exit           : std_logic_vector(15 downto 0) := x"000A"; --10
+signal reg_n_mipi_lanes       : std_logic_vector(1 downto 0) := DEFAULT_N_MIPI_LANES;
 
 --CDC (AXI clock -> clk_50MHz) and active runtime config snapshot
 signal cfg_control_meta, cfg_control_sync, cfg_control_active : std_logic_vector(31 downto 0) := x"00000028";
@@ -235,6 +252,7 @@ signal cfg_tlp_sot_short_meta, cfg_tlp_sot_short_sync, cfg_tlp_sot_short_active 
 signal cfg_ths_prepare_meta, cfg_ths_prepare_sync, cfg_ths_prepare_active : std_logic_vector(15 downto 0) := x"000F";
 signal cfg_ths_zero_meta, cfg_ths_zero_sync, cfg_ths_zero_active : std_logic_vector(15 downto 0) := x"0050";
 signal cfg_ths_exit_meta, cfg_ths_exit_sync, cfg_ths_exit_active : std_logic_vector(15 downto 0) := x"000A";
+signal cfg_n_mipi_lanes_meta, cfg_n_mipi_lanes_sync, cfg_n_mipi_lanes_active : std_logic_vector(1 downto 0) := DEFAULT_N_MIPI_LANES;
 
 signal start_toggle_reg       : std_logic := '0';
 signal start_toggle_meta      : std_logic := '0';
@@ -285,6 +303,7 @@ begin
       reg_ths_prepare <= x"000F";
       reg_ths_zero <= x"0050";
       reg_ths_exit <= x"000A";
+      reg_n_mipi_lanes <= DEFAULT_N_MIPI_LANES;
       start_toggle_reg <= '0';
       irq_pending <= '0';
     else
@@ -357,6 +376,8 @@ begin
           when REG_THS_EXIT_ADDR =>
             if s_axi_wstrb(0) = '1' then reg_ths_exit(7 downto 0) <= s_axi_wdata(7 downto 0); end if;
             if s_axi_wstrb(1) = '1' then reg_ths_exit(15 downto 8) <= s_axi_wdata(15 downto 8); end if;
+          when REG_N_MIPI_LANES_ADDR =>
+            if s_axi_wstrb(0) = '1' then reg_n_mipi_lanes <= s_axi_wdata(1 downto 0); end if;
           when others =>
             null;
         end case;
@@ -398,6 +419,8 @@ begin
             axi_rdata_reg <= x"0000" & reg_ths_zero;
           when REG_THS_EXIT_ADDR =>
             axi_rdata_reg <= x"0000" & reg_ths_exit;
+          when REG_N_MIPI_LANES_ADDR =>
+            axi_rdata_reg <= (31 downto 2 => '0') & reg_n_mipi_lanes;
           when others =>
             axi_rdata_reg <= (others => '0');
         end case;
@@ -451,6 +474,9 @@ begin
       cfg_ths_exit_meta <= x"000A";
       cfg_ths_exit_sync <= x"000A";
       cfg_ths_exit_active <= x"000A";
+      cfg_n_mipi_lanes_meta <= DEFAULT_N_MIPI_LANES;
+      cfg_n_mipi_lanes_sync <= DEFAULT_N_MIPI_LANES;
+      cfg_n_mipi_lanes_active <= DEFAULT_N_MIPI_LANES;
       start_toggle_meta <= '0';
       start_toggle_sync <= '0';
       start_toggle_sync_d <= '0';
@@ -482,6 +508,8 @@ begin
       cfg_ths_zero_sync <= cfg_ths_zero_meta;
       cfg_ths_exit_meta <= reg_ths_exit;
       cfg_ths_exit_sync <= cfg_ths_exit_meta;
+      cfg_n_mipi_lanes_meta <= reg_n_mipi_lanes;
+      cfg_n_mipi_lanes_sync <= cfg_n_mipi_lanes_meta;
 
       -- Start edge is synchronized and used as atomic config commit point.
       start_toggle_meta <= start_toggle_reg;
@@ -503,6 +531,7 @@ begin
         cfg_ths_prepare_active <= cfg_ths_prepare_sync;
         cfg_ths_zero_active <= cfg_ths_zero_sync;
         cfg_ths_exit_active <= cfg_ths_exit_sync;
+        cfg_n_mipi_lanes_active <= cfg_n_mipi_lanes_sync;
       end if;
     end if;
   end if;
@@ -510,38 +539,70 @@ end process;
   
 
 inst_selectio: selectio_serdes PORT MAP (
-    data_out_from_device => data_out_from_device,
-    data_out_to_pins_p => data_out_to_pins_p,
-    data_out_to_pins_n => data_out_to_pins_n,
+    data_out_from_device => data_out_from_device_01,
+    data_out_to_pins_p => data_out_to_pins_p_01,
+    data_out_to_pins_n => data_out_to_pins_n_01,
     clk_in => clk_200MHz_serdes,
     clk_div_in => clk_50MHz,
     clock_enable => '1',--hs_active,
     io_reset => rst
   );
 
-data_out_from_device(1) <= parallel_data_to_serdes(0);
-data_out_from_device(3) <= parallel_data_to_serdes(1);
-data_out_from_device(5) <= parallel_data_to_serdes(2);
-data_out_from_device(7) <= parallel_data_to_serdes(3);
-data_out_from_device(9) <= parallel_data_to_serdes(4);
-data_out_from_device(11) <= parallel_data_to_serdes(5);
-data_out_from_device(13) <= parallel_data_to_serdes(6);
-data_out_from_device(15) <= parallel_data_to_serdes(7);
+inst_selectio_23: selectio_serdes PORT MAP (
+    data_out_from_device => data_out_from_device_23,
+    data_out_to_pins_p => data_out_to_pins_p_23,
+    data_out_to_pins_n => data_out_to_pins_n_23,
+    clk_in => clk_200MHz_serdes,
+    clk_div_in => clk_50MHz,
+    clock_enable => '1',
+    io_reset => rst
+  );
 
-data_out_from_device(0) <= parallel_data_to_serdes(8);
-data_out_from_device(2) <= parallel_data_to_serdes(9);
-data_out_from_device(4) <= parallel_data_to_serdes(10);
-data_out_from_device(6) <= parallel_data_to_serdes(11);
-data_out_from_device(8) <= parallel_data_to_serdes(12);
-data_out_from_device(10) <= parallel_data_to_serdes(13);
-data_out_from_device(12) <= parallel_data_to_serdes(14);
-data_out_from_device(14) <= parallel_data_to_serdes(15);
+data_out_from_device_01(1) <= parallel_data_to_serdes(0);
+data_out_from_device_01(3) <= parallel_data_to_serdes(1);
+data_out_from_device_01(5) <= parallel_data_to_serdes(2);
+data_out_from_device_01(7) <= parallel_data_to_serdes(3);
+data_out_from_device_01(9) <= parallel_data_to_serdes(4);
+data_out_from_device_01(11) <= parallel_data_to_serdes(5);
+data_out_from_device_01(13) <= parallel_data_to_serdes(6);
+data_out_from_device_01(15) <= parallel_data_to_serdes(7);
+
+data_out_from_device_01(0) <= parallel_data_to_serdes(8);
+data_out_from_device_01(2) <= parallel_data_to_serdes(9);
+data_out_from_device_01(4) <= parallel_data_to_serdes(10);
+data_out_from_device_01(6) <= parallel_data_to_serdes(11);
+data_out_from_device_01(8) <= parallel_data_to_serdes(12);
+data_out_from_device_01(10) <= parallel_data_to_serdes(13);
+data_out_from_device_01(12) <= parallel_data_to_serdes(14);
+data_out_from_device_01(14) <= parallel_data_to_serdes(15);
+
+data_out_from_device_23(1) <= parallel_data_to_serdes(16);
+data_out_from_device_23(3) <= parallel_data_to_serdes(17);
+data_out_from_device_23(5) <= parallel_data_to_serdes(18);
+data_out_from_device_23(7) <= parallel_data_to_serdes(19);
+data_out_from_device_23(9) <= parallel_data_to_serdes(20);
+data_out_from_device_23(11) <= parallel_data_to_serdes(21);
+data_out_from_device_23(13) <= parallel_data_to_serdes(22);
+data_out_from_device_23(15) <= parallel_data_to_serdes(23);
+
+data_out_from_device_23(0) <= parallel_data_to_serdes(24);
+data_out_from_device_23(2) <= parallel_data_to_serdes(25);
+data_out_from_device_23(4) <= parallel_data_to_serdes(26);
+data_out_from_device_23(6) <= parallel_data_to_serdes(27);
+data_out_from_device_23(8) <= parallel_data_to_serdes(28);
+data_out_from_device_23(10) <= parallel_data_to_serdes(29);
+data_out_from_device_23(12) <= parallel_data_to_serdes(30);
+data_out_from_device_23(14) <= parallel_data_to_serdes(31);
 
  
-hs_c_d0_p <= data_out_to_pins_p(1);
-hs_c_d0_n  <= data_out_to_pins_n(1);
-hs_c_d1_p <= data_out_to_pins_p(0);
-hs_c_d1_n <= data_out_to_pins_n(0);
+hs_c_d0_p <= data_out_to_pins_p_01(1);
+hs_c_d0_n <= data_out_to_pins_n_01(1);
+hs_c_d1_p <= data_out_to_pins_p_01(0);
+hs_c_d1_n <= data_out_to_pins_n_01(0);
+hs_c_d2_p <= data_out_to_pins_p_23(1);
+hs_c_d2_n <= data_out_to_pins_n_23(1);
+hs_c_d3_p <= data_out_to_pins_p_23(0);
+hs_c_d3_n <= data_out_to_pins_n_23(0);
 
 
 --Instantinate differential outputs
@@ -574,7 +635,6 @@ clock_network :  clock_wizard
 --Instantiate the Frame stream generator 
 frame_gen: send_single_frame  
      GENERIC MAP(    
-       N_MIPI_LANES => N_MIPI_LANES, --number of MIPI CSI lanes currently only 2 implemented
        PIXELS_PER_LINE_MAX => 3240,
        ADD_DEBUG_OVERLAY => ADD_DEBUG_OVERLAY
      )
@@ -584,6 +644,7 @@ frame_gen: send_single_frame
      clk_DPHY_100Mhz => clk_DPHY_100Mhz,
      send_frame =>  send_frame,
      stop_frame => stop_frame_ctrl,
+    cfg_n_mipi_lanes => cfg_n_mipi_lanes_active,
     cfg_pixels_per_line => cfg_pixels_per_line_active,
     cfg_n_lines => cfg_n_lines_active,
     cfg_vc_num => cfg_type_vc_active(9 downto 8),
@@ -631,6 +692,10 @@ lp_c_d0_p  <= lp_lanes(1);
 lp_c_d0_n  <= lp_lanes(0);
 lp_c_d1_p  <= lp_lanes(1);
 lp_c_d1_n  <= lp_lanes(0);
+lp_c_d2_p  <= lp_lanes(1);
+lp_c_d2_n  <= lp_lanes(0);
+lp_c_d3_p  <= lp_lanes(1);
+lp_c_d3_n  <= lp_lanes(0);
 lp_c_clk_p <= lp_clk_lane(1);
 lp_c_clk_n <= lp_clk_lane(0);
 

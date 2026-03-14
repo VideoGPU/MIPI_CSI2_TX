@@ -24,6 +24,7 @@ enum {
     MIPI_CSI2_REG_THS_PREPARE         = 0x34u,
     MIPI_CSI2_REG_THS_ZERO            = 0x38u,
     MIPI_CSI2_REG_THS_EXIT            = 0x3Cu,
+    MIPI_CSI2_REG_N_MIPI_LANES        = 0x40u,
 };
 
 /* CONTROL register bit positions. */
@@ -58,6 +59,7 @@ typedef struct {
 } mipi_csi2_axi_t;
 
 typedef struct {
+    uint8_t n_mipi_lanes;  /* Runtime lane request: 1, 2, or 3(=4 lanes). */
     uint16_t pixels_per_line;
     uint16_t n_lines;
     uint8_t data_type;     /* 6-bit value. */

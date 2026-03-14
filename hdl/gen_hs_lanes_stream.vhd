@@ -21,8 +21,7 @@ use IEEE.NUMERIC_STD.ALL;
 ---*generates ECC for packet footer
 ---buffers first 4 bytes of data
 
-entity gen_hs_lanes_stream is generic (    
-    N_MIPI_LANES : integer := 2; --number of MIPI CSI lanes currently only 2 or 4 implemented
+entity gen_hs_lanes_stream is generic (
     N_TRAIL_BAITS : integer := 16;--16 works up to 400 mhz; --number of tails baits after HS payload sending complete. 2^Maximum HS_TRAIL_COUNTER_WIDTH - 1
     HS_TRAIL_COUNTER_WIDTH : integer := 6 --trail counter width
     );
@@ -33,10 +32,11 @@ Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      word_cound : in std_logic_vector(15 downto 0); --data length for long packet MUST be devideble by 4, frame number or line number for short packet 
      vc_num : in std_logic_vector(1 downto 0); --virtual channel number  
      data_type : in packet_type_t; --data type - YUV,RGB,RAW etc
+    active_lanes : in std_logic_vector(1 downto 0); --runtime requested lanes: 01/10/11 => 1/2/4
      
      --video_data_in one byte of video payload, if 10 bit format, 10->8 bit arbitrage is done outside, but word count should represent corect number
      --valid length of payload. 8 bit example 320*240*8bit/8 =  76,800; 10 bit example: 320*240*10bit/8 =  96,000;
-     video_data_in : in std_logic_vector(N_MIPI_LANES*8 -1  downto 0); 
+    video_data_in : in std_logic_vector(MIPI_MAX_DATA_BUS_WIDTH - 1 downto 0);
      start_hs_transmit : in std_logic; --trigger to start transmission,one clock cycle enough- word_cound,vc_num,video_data_in should be valid.
      csi_hs_data_1_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
      csi_hs_data_2_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
@@ -50,12 +50,16 @@ end gen_hs_lanes_stream;
 architecture Behavioral of gen_hs_lanes_stream is
 
 
-type state_type is (idle,send_first_and_second_bytes,send_third_and_forth_bytes,
-                   send_first_four_bytes,transmission_loop_two_lane,transmission_loop_four_lanes,send_src,
-                   hs_trail_short_packet,hs_trail_long_packet,hs_trail_loop);
+type state_type is (idle,
+                   send_header_byte1,send_header_byte2,send_header_byte3,send_header_byte4,
+                   send_first_and_second_bytes,send_third_and_forth_bytes,
+                   send_first_four_bytes,
+                   transmission_loop_one_lane,transmission_loop_two_lane,transmission_loop_four_lanes,
+                   send_src_one_lane_byte1,send_src_one_lane_byte2,send_src,
+                   hs_trail_one_lane,hs_trail_short_packet,hs_trail_long_packet,hs_trail_loop);
 signal state_reg, state_next : state_type := idle;
 signal hs_data_out_valid_reg,hs_data_out_valid_next : STD_LOGIC := '0';
-signal data_in_reg,data_in_next : std_logic_vector(N_MIPI_LANES*8 - 1 downto 0) := (others  => '0');
+signal data_in_reg,data_in_next : std_logic_vector(MIPI_MAX_DATA_BUS_WIDTH - 1 downto 0) := (others  => '0');
 signal data_out_1_reg,data_out_1_next : std_logic_vector(7 downto 0) := (others  => '0');
 signal data_out_2_reg,data_out_2_next : std_logic_vector(7 downto 0) := (others  => '0');
 signal data_out_3_reg,data_out_3_next : std_logic_vector(7 downto 0) := (others  => '0');
@@ -65,6 +69,7 @@ signal word_count_reg,word_count_next : std_logic_vector(15 downto 0); --data co
 signal crc_reg,crc_next:  std_logic_vector(15 downto 0) := x"FFFF";
 
 signal trail_counter_val_reg,trail_counter_val_next :  unsigned (HS_TRAIL_COUNTER_WIDTH downto 0);
+signal active_lanes_eff : std_logic_vector(1 downto 0);
 
 signal dummy_test_short_packed : std_logic_vector(31 downto 0) := x"B8B8B8B8";--x"DEADBEAF";
 
@@ -110,11 +115,14 @@ csi_hs_data_4_out       <= data_out_4_reg;
 packet_header <= get_short_packet(vc_num,data_type,word_cound); --production
 --packet_header <= dummy_test_short_packed; --test
 
+-- Runtime lane request is fully AXI-controlled (01/10/11 => 1/2/4 lanes).
+active_lanes_eff <= active_lanes;
+
 --line output state machine
 LINE_OUT_FSMD : process(state_reg,data_in_reg,hs_data_out_valid_reg,start_hs_transmit,video_data_in,
                                 data_out_1_reg,data_out_2_reg,data_out_3_reg,data_out_4_reg,
                                 packet_header,word_count_reg,crc_reg,word_cound,is_short_packet,
-                                trail_counter_val_reg)
+                                trail_counter_val_reg,active_lanes_eff)
 begin
 
     state_next   <= state_reg;
@@ -141,12 +149,20 @@ begin
            
             if (start_hs_transmit = '1') then
                 hs_data_out_valid_next <= '1';
-                
-                if (N_MIPI_LANES = 2) then
+
+                if (active_lanes_eff = "01") then
+                    data_out_1_next <= Sync_Sequence;
+                    data_out_2_next <= (others => '0');
+                    data_out_3_next <= (others => '0');
+                    data_out_4_next <= (others => '0');
+                    state_next <= send_header_byte1;
+                elsif (active_lanes_eff = "10") then
                     data_out_1_next <= Sync_Sequence; --Syncronization byte of packet header,  start of transmission, lane 1
                     data_out_2_next <= Sync_Sequence; --Syncronization byte of packet header,  start of transmission, lane 2
+                    data_out_3_next <= (others => '0');
+                    data_out_4_next <= (others => '0');
                     state_next <= send_first_and_second_bytes;
-                 elsif (N_MIPI_LANES = 4) then
+                 elsif (active_lanes_eff = "11") then
                      data_out_1_next <= Sync_Sequence; --Syncronization byte of packet header,  start of transmission, lane 1
                      data_out_2_next <= Sync_Sequence; --Syncronization byte of packet header,  start of transmission, lane 2
                      data_out_3_next <= Sync_Sequence; --Syncronization byte of packet header,  start of transmission, lane 3
@@ -160,6 +176,33 @@ begin
                  end if;
                                                                       
             end if;--start_hs_transmit
+
+        when send_header_byte1 =>
+            data_out_1_next <= packet_header(7 downto 0);
+            data_out_2_next <= (others => '0');
+            data_out_3_next <= (others => '0');
+            data_out_4_next <= (others => '0');
+            state_next <= send_header_byte2;
+
+        when send_header_byte2 =>
+            data_out_1_next <= packet_header(15 downto 8);
+            state_next <= send_header_byte3;
+
+        when send_header_byte3 =>
+            data_out_1_next <= packet_header(23 downto 16);
+            state_next <= send_header_byte4;
+
+        when send_header_byte4 =>
+            data_out_1_next <= packet_header(31 downto 24);
+            if (is_short_packet = '0') then
+                ready_for_hs_data_in_next_cycle <= '1';
+                data_in_next <= video_data_in;
+                crc_next <= nextCRC16_D8(video_data_in(7 downto 0),crc_reg);
+                word_count_next <= x"0001";
+                state_next <= transmission_loop_one_lane;
+            else
+                state_next <= hs_trail_one_lane;
+            end if;
             
             
         when send_first_and_second_bytes =>
@@ -193,7 +236,6 @@ begin
             end if; --short/long packet
             
         when send_first_four_bytes =>      
-            if (N_MIPI_LANES = 4) then
                 data_out_1_next <= packet_header(7 downto 0); --first byte of packet header
                 data_out_2_next <= packet_header(15 downto 8); --second byte of packet header   
                 data_out_3_next <= packet_header(23 downto 16); --third byte of packet header
@@ -215,10 +257,8 @@ begin
                 else --short packet
                     state_next <= hs_trail_short_packet;                        
                 end if; --short/long packet
-             end if; --N_MIPI_LANES = 4
             
         when transmission_loop_four_lanes =>
-        if (N_MIPI_LANES = 4) then        
                     data_in_next <= video_data_in;
                     data_out_1_next <= data_in_reg(7  downto 0);
                     data_out_2_next <= data_in_reg(15 downto 8);
@@ -240,7 +280,6 @@ begin
                         state_next <= send_src;   
                         
                      end if;
-        end if; --N_MIPI_LANES = 4             
                                         
         when transmission_loop_two_lane =>
             data_in_next <= video_data_in;
@@ -258,6 +297,35 @@ begin
                crc_next <= crc_reg; --no more CRC calc. needed
                 state_next <= send_src;   
             end if;                    
+
+        when transmission_loop_one_lane =>
+            data_in_next <= video_data_in;
+            data_out_1_next <= data_in_reg(7 downto 0);
+            data_out_2_next <= (others => '0');
+            data_out_3_next <= (others => '0');
+            data_out_4_next <= (others => '0');
+            crc_next <= nextCRC16_D8(video_data_in(7 downto 0),crc_reg);
+
+            word_count_next <= std_logic_vector(unsigned(word_count_reg) + 1);
+            if (word_count_reg = std_logic_vector(unsigned(word_cound))) then
+                crc_next <= crc_reg;
+                state_next <= send_src_one_lane_byte1;
+            end if;
+
+        when send_src_one_lane_byte1 =>
+            data_out_1_next <= crc_reg(7 downto 0);
+            data_out_2_next <= (others => '0');
+            data_out_3_next <= (others => '0');
+            data_out_4_next <= (others => '0');
+            state_next <= send_src_one_lane_byte2;
+
+        when send_src_one_lane_byte2 =>
+            data_out_1_next <= crc_reg(15 downto 8);
+            data_out_2_next <= (others => '0');
+            data_out_3_next <= (others => '0');
+            data_out_4_next <= (others => '0');
+            crc_next <= x"FFFF";
+            state_next <= hs_trail_one_lane;
         
         when send_src =>
             crc_next <= crc_reg;
@@ -287,6 +355,14 @@ begin
             
             trail_counter_val_next <= to_unsigned(1, trail_counter_val_reg'length);
             state_next  <= hs_trail_loop;
+
+        when hs_trail_one_lane =>
+            data_out_1_next <= (others => (not data_out_1_reg(7)));
+            data_out_2_next <= (others => '0');
+            data_out_3_next <= (others => '0');
+            data_out_4_next <= (others => '0');
+            trail_counter_val_next <= to_unsigned(1, trail_counter_val_reg'length);
+            state_next <= hs_trail_loop;
             
         when hs_trail_loop => 
     

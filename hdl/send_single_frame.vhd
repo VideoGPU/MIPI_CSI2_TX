@@ -35,7 +35,6 @@ use work.Common.all;
 
 entity send_single_frame is
     Generic (	
-        N_MIPI_LANES : integer := 4;
         LINE_CONTER_WIDTH : integer := 13; --bits width of line counter, 13 bit means max value for N_LINES = 8191
         PIXELS_PER_LINE_MAX : integer := 3240;--max payload bytes per line used by ROM generator
         ADD_DEBUG_OVERLAY : integer := 1
@@ -46,6 +45,7 @@ entity send_single_frame is
         clk_DPHY_100Mhz : in std_logic;
         send_frame : in std_logic; --triggers frame sending, one clock cycle is enough          
         stop_frame : in std_logic; --request graceful stop (frame end at next packet boundary)
+        cfg_n_mipi_lanes : in std_logic_vector(1 downto 0);
         cfg_pixels_per_line : in std_logic_vector(15 downto 0);
         cfg_n_lines : in std_logic_vector(15 downto 0);
         cfg_vc_num : in std_logic_vector(1 downto 0);
@@ -100,9 +100,7 @@ COMPONENT one_lane_D_PHY is generic (
 END COMPONENT;
 
 
-COMPONENT gen_hs_lanes_stream is generic (    
-    N_MIPI_LANES : integer := 2 --number of MIPI CSI lanes currently only 2 implemented
-    );
+COMPONENT gen_hs_lanes_stream is
 Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      rst : in  std_logic;
      is_short_packet : in std_logic; -- if high, no data sent, only short packet, Frame Start, Frame End etc. 
@@ -110,11 +108,12 @@ Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      word_cound : in std_logic_vector(15 downto 0); --data length for long packet MUST be devideble by 4, frame number or line number for short packet
      vc_num : in std_logic_vector(1 downto 0); --virtual channel number  
      data_type : in packet_type_t; --data type - YUV,RGB,RAW etc     
+    active_lanes : in std_logic_vector(1 downto 0);
      --data_type : std_logic_vector(4 downto 0); -- for post-synthesis
      
      --video_data_in one byte of video payload, if 10 bit format, 10->8 bit arbitrage is done outside, but word count should represent corect number
      --valid length of payload. 8 bit example 320*240*8bit/8 =  76,800; 10 bit example: 320*240*10bit/8 =  96,000;
-     video_data_in : in std_logic_vector(N_MIPI_LANES*8 -1 downto 0); 
+    video_data_in : in std_logic_vector(MIPI_MAX_DATA_BUS_WIDTH - 1 downto 0);
      start_hs_transmit : in std_logic; --trigger to start transmission,one clock cycle enough- word_cound,vc_num,video_data_in should be valid.
      csi_hs_data_1_out : out std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializersignal
      csi_hs_data_2_out : out std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializersignal
@@ -129,7 +128,6 @@ END COMPONENT;
 ----Simple RAM based generator
 COMPONENT colorbar_line_generator_raw10 is
     Generic (	
-    N_MIPI_LANES : integer := 2;
     PIXELS_8BIT_PER_LINE : integer := 3240;
     BUS_WIDTH : integer := 8; --8 bits for now
     ADD_DEBUG_OVERLAY : integer := 1
@@ -141,7 +139,7 @@ COMPONENT colorbar_line_generator_raw10 is
     line_numer : in  std_logic; --0= line 1, 1 = line 2
     debug_overlay_en : in std_logic;
     overlay_frame_number : in unsigned(15 downto 0);
-    video_data_out : out std_logic_vector(N_MIPI_LANES*BUS_WIDTH -1 downto 0)
+    video_data_out : out std_logic_vector(MAX_N_MIPI_LANES*BUS_WIDTH - 1 downto 0)
     );
 end COMPONENT;
 
@@ -149,7 +147,6 @@ end COMPONENT;
 ----More complex, on-the-fly generator, SV
 --COMPONENT video_pattern_generator is
 --    Generic (	
---    N_MIPI_LANES: integer := 2;
 --    PIXELS_8BIT_PER_LINE: integer := 3240;
 --    N_LINES: integer := 1944;
 --    BUS_WIDTH: integer := 8;
@@ -163,7 +160,7 @@ end COMPONENT;
 --    frame_number : in unsigned(15 downto 0);
 --    line_number  : in unsigned(WIDTH_N_LINES -1 downto 0);
 --    test_patter_selector : in unsigned(1 downto 0);
---    video_data_out : out std_logic_vector(N_MIPI_LANES*BUS_WIDTH -1 downto 0)
+--    video_data_out : out std_logic_vector(MAX_N_MIPI_LANES*BUS_WIDTH - 1 downto 0)
 --    );
 --end COMPONENT;
 
@@ -176,8 +173,8 @@ signal phi_is_ready_to_send_new_packet : STD_LOGIC;
 
 --video_data_in one byte of video payload, if 10 bit format, 10->8 bit arbitrage is done outside, but word count should represent corect number
 --valid length of payload. 8 bit example 320*240*8bit/8 =  76,800; 10 bit example: 320*240*10bit/8 =  96,000;
-signal video_data_in :  std_logic_vector(N_MIPI_LANES*8 -1 downto 0); --:= x"BEAF";--x"BABADEDA";
-signal video_data_from_generator :  std_logic_vector(N_MIPI_LANES*8 -1 downto 0);
+signal video_data_in :  std_logic_vector(MIPI_MAX_DATA_BUS_WIDTH - 1 downto 0); --:= x"BEAF";--x"BABADEDA";
+signal video_data_from_generator :  std_logic_vector(MIPI_MAX_DATA_BUS_WIDTH - 1 downto 0);
 signal start_hs_transmit :  std_logic; --trigger to start transmission,one clock cycle enough- word_cound,vc_num,video_data_in should be valid.
 
 --HS outputs
@@ -256,7 +253,6 @@ begin
 -- Instantiate the video generator 
 Colorbar_generator : colorbar_line_generator_raw10
     Generic Map(	
-    N_MIPI_LANES => N_MIPI_LANES,
     PIXELS_8BIT_PER_LINE => PIXELS_PER_LINE_MAX,-- Test vector is 3240 bytes length;
     ADD_DEBUG_OVERLAY => ADD_DEBUG_OVERLAY
     )
@@ -274,7 +270,6 @@ Colorbar_generator : colorbar_line_generator_raw10
 -- Instantiate the video generator
 --Colorbar_generator : video_pattern_generator
 --    Generic Map(	
---    N_MIPI_LANES => N_MIPI_LANES,
 --    PIXELS_8BIT_PER_LINE => PIXELS_PER_LINE,
 --    N_LINES => N_LINES,
 --    WIDTH_N_PIXELS => LINE_CONTER_WIDTH,
@@ -333,9 +328,6 @@ Clk_LP_Lane: one_lane_D_PHY PORT MAP(
 --Instantiate the HS stream generator 
 
 hs_stream_gen: gen_hs_lanes_stream  
-     GENERIC MAP(    
-       N_MIPI_LANES => N_MIPI_LANES --number of MIPI CSI lanes currently only 2 implemented
-     )
      PORT MAP(
      clk => clk,
      rst => rst,
@@ -343,6 +335,7 @@ hs_stream_gen: gen_hs_lanes_stream
      word_cound => word_count_or_framen_or_linen,
      vc_num => vc_num,
      data_type => data_type,
+    active_lanes => cfg_n_mipi_lanes,
      video_data_in =>  video_data_in,
      start_hs_transmit => start_hs_transmit,
      csi_hs_data_1_out => csi_hs_data_1_out,
@@ -400,6 +393,7 @@ video_data_in     <=  video_data_from_generator;
 Frame_Sending_FSMD : process(frame_state_reg,line_counter_reg,send_frame,
                             send_packet_reg,phi_is_ready_to_send_new_packet,
                             frame_number_reg, stop_frame,
+                            cfg_n_mipi_lanes,
                             cfg_data_type, cfg_vc_num, cfg_pixels_per_line,
                             cfg_n_lines, cfg_frame_end_word
                             )
@@ -420,7 +414,7 @@ begin
         when FS_IDLE =>
         
         
-            if (send_frame = '1') then
+            if (send_frame = '1' and cfg_n_mipi_lanes /= "00") then
                 --start frame trigger received            
                 frame_state_next <= FS_FRAME_START_SP;
                 frame_number_next <= frame_number_reg + 1;   

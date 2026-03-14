@@ -33,6 +33,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 package Common is   
 
+	constant MAX_N_MIPI_LANES : integer := 4;
+	constant MIPI_LANE_BUS_WIDTH : integer := 8;
+	constant MIPI_MAX_DATA_BUS_WIDTH : integer := MAX_N_MIPI_LANES * MIPI_LANE_BUS_WIDTH;
+
    type my_enum_type is (r1, r2, r3);
    type packet_type_t is (Frame_Start,Frame_End,Line_Start,Line_End,Default_Short_Packet,    --short packet 
 						   --YUV

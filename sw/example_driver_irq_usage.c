@@ -44,6 +44,7 @@ int main(void)
 
     mipi_csi2_config_t cfg;
     mipi_csi2_get_default_config(&cfg);
+    cfg.n_mipi_lanes = 2u;
     cfg.irq_enable = true;
     cfg.legacy_trigger_enable = false;
 

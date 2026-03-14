@@ -31,6 +31,7 @@ void mipi_csi2_write_reg(const mipi_csi2_axi_t *dev, uint32_t offset, uint32_t v
 
 void mipi_csi2_get_default_config(mipi_csi2_config_t *cfg)
 {
+    cfg->n_mipi_lanes = 2u;
     cfg->pixels_per_line = 3240u;
     cfg->n_lines = 1944u;
     cfg->data_type = MIPI_CSI2_DT_RAW10;
@@ -57,6 +58,7 @@ void mipi_csi2_apply_config(const mipi_csi2_axi_t *dev, const mipi_csi2_config_t
     uint32_t control = 0u;
     uint32_t type_vc = 0u;
 
+    mipi_csi2_write_reg(dev, MIPI_CSI2_REG_N_MIPI_LANES, (uint32_t)(cfg->n_mipi_lanes & 0x03u));
     mipi_csi2_write_reg(dev, MIPI_CSI2_REG_PIXELS_PER_LINE, cfg->pixels_per_line);
     mipi_csi2_write_reg(dev, MIPI_CSI2_REG_N_LINES, cfg->n_lines);
 

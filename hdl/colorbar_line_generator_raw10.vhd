@@ -36,7 +36,6 @@ use work.Common.all;
 
 entity colorbar_line_generator_raw10 is
     Generic (	
-    N_MIPI_LANES : integer := 2;
     PIXELS_8BIT_PER_LINE : integer := 3240;
     PIXEL_COUNTER_WIDTH_BITS : integer := 12; --max PIXELS_8BIT_PER_LINE = 4095
     BUS_WIDTH : integer := 8; --8 bits for now
@@ -49,7 +48,7 @@ entity colorbar_line_generator_raw10 is
     line_numer : in  std_logic; --0= line 1, 1 = line 2
     debug_overlay_en : in std_logic;
     overlay_frame_number : in unsigned(15 downto 0);
-    video_data_out : out std_logic_vector(N_MIPI_LANES*BUS_WIDTH -1 downto 0)
+    video_data_out : out std_logic_vector(MAX_N_MIPI_LANES*BUS_WIDTH - 1 downto 0)
     );
 end colorbar_line_generator_raw10;
 
