@@ -37,9 +37,7 @@ entity send_single_frame is
     Generic (	
         N_MIPI_LANES : integer := 4;
         LINE_CONTER_WIDTH : integer := 13; --bits width of line counter, 13 bit means max value for N_LINES = 8191
-        PIXELS_PER_LINE : integer := 3240;--64;--3240;
-        N_LINES : integer := 1944;-- 4;--1944;
-        CLOCK_KHZ_LP : integer := 100000; --clock rate in KHz
+        PIXELS_PER_LINE_MAX : integer := 3240;--max payload bytes per line used by ROM generator
         ADD_DEBUG_OVERLAY : integer := 1
     );
     Port (
@@ -47,6 +45,21 @@ entity send_single_frame is
         rst : in  std_logic;
         clk_DPHY_100Mhz : in std_logic;
         send_frame : in std_logic; --triggers frame sending, one clock cycle is enough          
+        stop_frame : in std_logic; --request graceful stop (frame end at next packet boundary)
+        cfg_pixels_per_line : in std_logic_vector(15 downto 0);
+        cfg_n_lines : in std_logic_vector(15 downto 0);
+        cfg_vc_num : in std_logic_vector(1 downto 0);
+        cfg_data_type : in std_logic_vector(5 downto 0);
+        cfg_frame_end_word : in std_logic_vector(15 downto 0);
+        cfg_tLP_SOT_Delay_clock : in std_logic_vector(15 downto 0);
+        cfg_tLPX_Delay_clock : in std_logic_vector(15 downto 0);
+        cfg_tLP_SOT_Delay_data : in std_logic_vector(15 downto 0);
+        cfg_tLPX_Delay_data : in std_logic_vector(15 downto 0);
+        cfg_tLP_SOT_short_packet_delay : in std_logic_vector(15 downto 0);
+        cfg_tHSprepare : in std_logic_vector(15 downto 0);
+        cfg_tHSzero : in std_logic_vector(15 downto 0);
+        cfg_tHSexit : in std_logic_vector(15 downto 0);
+        cfg_debug_overlay_en : in std_logic;
         frame_done : out std_logic; --indicates that frame was sent successfully
         hs_active : out std_logic; -- ON when entrering HS mode, it is a good time to switch mixer lines and activate HS  
         hs_data_valid : out std_logic; -- when ON, csi_hs_data_out is valid to transmit
@@ -126,6 +139,7 @@ COMPONENT colorbar_line_generator_raw10 is
     rst : in  std_logic;
     hs_active : in  std_logic;
     line_numer : in  std_logic; --0= line 1, 1 = line 2
+    debug_overlay_en : in std_logic;
     overlay_frame_number : in unsigned(15 downto 0);
     video_data_out : out std_logic_vector(N_MIPI_LANES*BUS_WIDTH -1 downto 0)
     );
@@ -206,37 +220,33 @@ signal lp_clk_lane_hs_mode_flag      :  STD_LOGIC; --goes high when entering HS 
 signal lp_clk_lane_phi_is_ready_to_send_new_packet : STD_LOGIC;
 signal lp_dance_complete_clk, lp_dance_complete_data : STD_LOGIC;
 
---LP timings
---constant tLP_SOT_Delay_clock : integer := 84; --420 ns at 200 MHz clock
---constant tLPX_Delay_clock : integer := 20;  --100 ns at 200 MHz clock
---constant tLP_SOT_Delay_data : integer := 375;  --1875 ns at 200 MHz clock
---constant tLPX_Delay_data : integer := 20;  --100 ns at 200 MHz clock
---constant tLP_SOT_short_packet_delay : integer := 1566;  --7830 ns at 200 MHz clock
---constant tHSprepare : integer := 30; --6 clock cycles of 100 Mhz = 60 ns
---constant tHSzero : integer := 160; --20 clock cycles of 100 Mhz = 200 ns --We encrease tHSzero to enable locking of clock of receiver (workaroud)
---constant tHSexit : integer := 20; --8 clock cycles of 100 Mhz = 100 ns
-
---constant CLOCK_KHZ_LP             : integer := 100000; --clock rate in KHz
-constant TQ                       : integer := 80; --TQ = Time quanta in ns
-constant N_CLOCK_PERIODS_IN_TQ    : integer := TQ*CLOCK_KHZ_LP/1000000;
-
-constant tLP_SOT_Delay_clock_ns        : integer := 420; 
-constant tLPX_Delay_clock_ns           : integer := 100; 
-constant tLP_SOT_Delay_data_ns         : integer := 1875;
-constant tLPX_Delay_data_ns            : integer := 100;
-constant tLP_SOT_short_packet_delay_ns : integer := 7830;
-constant tHSprepare_ns                 : integer := 150; 
-constant tHSzero_ns                    : integer := 800;
-constant tHSexit_ns                    : integer := 100;
-
-constant tLP_SOT_Delay_clock        : integer := N_CLOCK_PERIODS_IN_TQ*tLP_SOT_Delay_clock_ns/TQ;
-constant tLPX_Delay_clock           : integer := N_CLOCK_PERIODS_IN_TQ*tLPX_Delay_clock_ns/TQ;
-constant tLP_SOT_Delay_data         : integer := N_CLOCK_PERIODS_IN_TQ*tLP_SOT_Delay_data_ns/TQ;
-constant tLPX_Delay_data            : integer := N_CLOCK_PERIODS_IN_TQ*tLPX_Delay_data_ns/TQ;
-constant tLP_SOT_short_packet_delay : integer := N_CLOCK_PERIODS_IN_TQ*tLP_SOT_short_packet_delay_ns/TQ;
-constant tHSprepare                 : integer := N_CLOCK_PERIODS_IN_TQ*tHSprepare_ns/TQ; 
-constant tHSzero                    : integer := N_CLOCK_PERIODS_IN_TQ*tHSzero_ns/TQ;
-constant tHSexit                    : integer := N_CLOCK_PERIODS_IN_TQ*tHSexit_ns/TQ;
+function to_packet_type(data_type_code : std_logic_vector(5 downto 0)) return packet_type_t is
+begin
+    case data_type_code is
+        when "000000" => return Frame_Start;
+        when "000001" => return Frame_End;
+        when "000010" => return Line_Start;
+        when "000011" => return Line_End;
+        when "000100" => return Default_Short_Packet;
+        when "011000" => return YUV420_8_bit;
+        when "011001" => return YUV420_10_bit;
+        when "011010" => return Legacy_YUV420_8_bit;
+        when "011110" => return YUV422_8_bit;
+        when "011111" => return YUV422_10_bit;
+        when "100000" => return RGB444;
+        when "100001" => return RGB555;
+        when "100010" => return RGB565;
+        when "100011" => return RGB666;
+        when "100100" => return RGB888;
+        when "101000" => return RAW6;
+        when "101001" => return RAW7;
+        when "101010" => return RAW8;
+        when "101011" => return RAW10;
+        when "101100" => return RAW12;
+        when "101101" => return RAW14;
+        when others => return RAW10;
+    end case;
+end function;
 
 
 begin
@@ -247,7 +257,7 @@ begin
 Colorbar_generator : colorbar_line_generator_raw10
     Generic Map(	
     N_MIPI_LANES => N_MIPI_LANES,
-    PIXELS_8BIT_PER_LINE => PIXELS_PER_LINE,-- Test vector is 3240 bytes length;
+    PIXELS_8BIT_PER_LINE => PIXELS_PER_LINE_MAX,-- Test vector is 3240 bytes length;
     ADD_DEBUG_OVERLAY => ADD_DEBUG_OVERLAY
     )
     Port Map(
@@ -255,6 +265,7 @@ Colorbar_generator : colorbar_line_generator_raw10
     rst => reset_colorbar_generator,
     hs_active =>  hs_data_out_valid,
     line_numer => not line_counter_reg(0), --0= line 1, 1 = line 2
+    debug_overlay_en => cfg_debug_overlay_en,
     overlay_frame_number => frame_number_reg,
     video_data_out => video_data_from_generator
     );
@@ -291,13 +302,13 @@ LP_Lane: one_lane_D_PHY PORT MAP(
      hs_mode_flag  => hs_mode_flag,
      lp_lanes => lp_lanes,
      lp_dance_complete => lp_dance_complete_data,
-     tLP_SOT_Delay => tLP_SOT_Delay_data,
-     tLPX_Delay => tLPX_Delay_data,
+    tLP_SOT_Delay => to_integer(unsigned(cfg_tLP_SOT_Delay_data)),
+    tLPX_Delay => to_integer(unsigned(cfg_tLPX_Delay_data)),
      is_short_packet => is_short_packet,
-     tLP_SOT_short_packet_delay => tLP_SOT_short_packet_delay,
-     tHSprepare => tHSprepare,  
-     tHSzero    => tHSzero,
-     tHSexit    => tHSexit
+    tLP_SOT_short_packet_delay => to_integer(unsigned(cfg_tLP_SOT_short_packet_delay)),
+    tHSprepare => to_integer(unsigned(cfg_tHSprepare)),
+    tHSzero    => to_integer(unsigned(cfg_tHSzero)),
+    tHSexit    => to_integer(unsigned(cfg_tHSexit))
      );
      
 Clk_LP_Lane: one_lane_D_PHY PORT MAP(
@@ -309,13 +320,13 @@ Clk_LP_Lane: one_lane_D_PHY PORT MAP(
       hs_mode_flag  => lp_clk_lane_hs_mode_flag,
       lp_lanes => lp_clk_lane,
       lp_dance_complete => lp_dance_complete_clk,
-      tLP_SOT_Delay => tLP_SOT_Delay_clock,
-      tLPX_Delay => tLPX_Delay_clock,
+    tLP_SOT_Delay => to_integer(unsigned(cfg_tLP_SOT_Delay_clock)),
+    tLPX_Delay => to_integer(unsigned(cfg_tLPX_Delay_clock)),
       is_short_packet => is_short_packet,
-      tLP_SOT_short_packet_delay => tLP_SOT_short_packet_delay,
-      tHSprepare => tHSprepare,  
-      tHSzero    => tHSzero,
-      tHSexit    => tHSexit
+    tLP_SOT_short_packet_delay => to_integer(unsigned(cfg_tLP_SOT_short_packet_delay)),
+    tHSprepare => to_integer(unsigned(cfg_tHSprepare)),
+    tHSzero    => to_integer(unsigned(cfg_tHSzero)),
+    tHSexit    => to_integer(unsigned(cfg_tHSexit))
       );
      
           
@@ -388,7 +399,9 @@ video_data_in     <=  video_data_from_generator;
 
 Frame_Sending_FSMD : process(frame_state_reg,line_counter_reg,send_frame,
                             send_packet_reg,phi_is_ready_to_send_new_packet,
-                            frame_number_reg
+                            frame_number_reg, stop_frame,
+                            cfg_data_type, cfg_vc_num, cfg_pixels_per_line,
+                            cfg_n_lines, cfg_frame_end_word
                             )
 
 begin
@@ -417,7 +430,7 @@ begin
         when FS_FRAME_START_SP =>
                 
             is_short_packet <= '1'; --send short packet, frame start
-            vc_num <= "00";--"00";
+            vc_num <= cfg_vc_num;
             data_type <= Frame_Start; 
             --for Frame_Start ,word_cound is a frame number starting from 1       
             word_count_or_framen_or_linen <= std_logic_vector(frame_number_reg);--x"0001";--x"1985"; --std_logic_vector(to_unsigned(0, 16));        
@@ -434,10 +447,10 @@ begin
                 
             --send long packet -line
             is_short_packet <= '0'; 
-            vc_num <= "00";
-            data_type <= RAW10; --0x2B 
+            vc_num <= cfg_vc_num;
+            data_type <= to_packet_type(cfg_data_type);
             --for long packet (one line of pixels) word_count_or_framen_or_linen is number of bytes in line
-            word_count_or_framen_or_linen <= std_logic_vector(to_unsigned(PIXELS_PER_LINE, 16)); --x"000C"; --12--x"CAD6"; --std_logic_vector(to_unsigned(0, 16)); 
+            word_count_or_framen_or_linen <= cfg_pixels_per_line;
         
               
         
@@ -450,7 +463,7 @@ begin
                 send_packet_next <= '1';
                 
                                         
-                if (line_counter_reg = N_LINES) then 
+                if (line_counter_reg = unsigned(cfg_n_lines)) or (stop_frame = '1') then
                     --we are done, send  frame end packet
                     send_packet_next <= '1';
                 
@@ -463,10 +476,10 @@ begin
         when FS_FRAME_END_SP  =>
         
             is_short_packet <= '1'; --send short packet, frame start
-            vc_num <= "00";--"00";
+            vc_num <= cfg_vc_num;
             data_type <= Frame_End; 
             --for Frame_End ,word_count_or_framen_or_linen is not relevant (TODO: validate it)     
-            word_count_or_framen_or_linen <= x"1753"; --std_logic_vector(to_unsigned(0, 16));
+            word_count_or_framen_or_linen <= cfg_frame_end_word;
             
             frame_done <= '1';
         

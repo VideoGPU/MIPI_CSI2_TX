@@ -47,6 +47,7 @@ entity colorbar_line_generator_raw10 is
     rst : in  std_logic;
     hs_active : in  std_logic;
     line_numer : in  std_logic; --0= line 1, 1 = line 2
+    debug_overlay_en : in std_logic;
     overlay_frame_number : in unsigned(15 downto 0);
     video_data_out : out std_logic_vector(N_MIPI_LANES*BUS_WIDTH -1 downto 0)
     );
@@ -96,7 +97,9 @@ begin
  
  
  
-line_send_fsmd : process(pattern_state_reg,pixel_counter_reg,hs_active,line_numer)
+line_send_fsmd : process(pattern_state_reg,pixel_counter_reg,hs_active,line_numer,debug_overlay_en,overlay_frame_number)
+ variable overlay_offset : integer;
+ variable idx_base : integer;
  
  begin
      pattern_state_next <= pattern_state_reg;
@@ -123,23 +126,28 @@ line_send_fsmd : process(pattern_state_reg,pixel_counter_reg,hs_active,line_nume
                 --This one for byte3 and byte4 in 2lanes configuration
                 pattern_state_next <=  PS_TRANSMIT;                
           when PS_TRANSMIT =>
+                overlay_offset := 0;
+                if (ADD_DEBUG_OVERLAY = 1 and debug_overlay_en = '1') then
+                    overlay_offset := 10 * to_integer(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0));
+                end if;
+                idx_base := to_integer(pixel_counter_reg) - overlay_offset;
                                
                 if (line_numer = '0') then
-                    video_data_out(15 downto 8) <=  line_1(to_integer(pixel_counter_reg - 10*ADD_DEBUG_OVERLAY*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))) + 1);
-                    video_data_out(7 downto 0)  <=  line_1(to_integer(pixel_counter_reg - 10*ADD_DEBUG_OVERLAY*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))));
+                    video_data_out(15 downto 8) <=  line_1(idx_base + 1);
+                    video_data_out(7 downto 0)  <=  line_1(idx_base);
                 else
-                    video_data_out(15 downto 8) <=  line_2(to_integer(pixel_counter_reg - 10*ADD_DEBUG_OVERLAY*overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0)) + 1 );
-                    video_data_out(7 downto 0)  <=  line_2(to_integer(pixel_counter_reg - 10*ADD_DEBUG_OVERLAY*overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0)));               
+                    video_data_out(15 downto 8) <=  line_2(idx_base + 1);
+                    video_data_out(7 downto 0)  <=  line_2(idx_base);
                 end if;
                 
                 --TODO: fix it,very confusing + code duplication
-                if (ADD_DEBUG_OVERLAY = 1 and to_integer(pixel_counter_reg) - overlay_frame_number < 5 ) then
+                if (ADD_DEBUG_OVERLAY = 1 and debug_overlay_en = '1' and to_integer(pixel_counter_reg) - to_integer(overlay_frame_number) < 5 ) then
                     if (line_numer = '0') then
-                        video_data_out(15 downto 8) <= not line_1(to_integer(pixel_counter_reg - 10*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))) + 1);
-                        video_data_out(7 downto 0)  <= not line_1(to_integer(pixel_counter_reg - 10*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))));
+                        video_data_out(15 downto 8) <= not line_1(idx_base + 1);
+                        video_data_out(7 downto 0)  <= not line_1(idx_base);
                     else
-                        video_data_out(15 downto 8) <= not line_2(to_integer(pixel_counter_reg - 10*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))) + 1 );
-                        video_data_out(7 downto 0)  <= not line_2(to_integer(pixel_counter_reg - 10*(overlay_frame_number(PIXEL_COUNTER_WIDTH_BITS - 1 downto 0))));               
+                        video_data_out(15 downto 8) <= not line_2(idx_base + 1);
+                        video_data_out(7 downto 0)  <= not line_2(idx_base);
                     end if;
                 end if; 
                     
