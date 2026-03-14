@@ -43,17 +43,10 @@ entity fmc_mipi_top is     Generic (
    
    --start of V2 board, in the commments pinout for KC705 board, HPC connector
                                 --FMC pin number, HPC name, KC705 FPGA pin
-   i2c3_cam_clk : in std_logic; --H7, HPC_LA02_P; H24
    monitor_1p2v : in std_logic; --H8, HPC_LA02_N; H25
-   
-   i2c2_cam_clk : in std_logic;    --G9,  HPC_LA03_P; H26
-   i2c3_cam_dat : inout std_logic; --G10, HPC_LA03_N; H27
    
    switch_data_lanes_vadj  : out std_logic; --G12, HPC_LA08_P; E29
    switch_clock_lanes_vadj : out std_logic; --G13, HPC_LA08_N; E30
-   
-   i2c_cam_dat : inout std_logic; --G24, HPC_LA22_P; C20
-   i2c_cam_clk : inout std_logic;    --G25, HPC_LA22_N; B20
    
    monitor_1p8v : in std_logic; --G27, HPC_LA25_P; G17
    cam0_rst     : in std_logic; --G28, HPC_LA25_N; F17
@@ -64,8 +57,6 @@ entity fmc_mipi_top is     Generic (
    
    monitor_2p8v : in std_logic;  --D8, HPC_LA01_CC_P; D26                           
    monitor_3p3v : in std_logic;  --D9, HPC_LA01_CC_N; C26
-   
-   i2c2_cam_dat : inout std_logic; --D11, HPC_LA05_P; G29
    
    en_mipi_out_data_vadj  :  out std_logic := '1'; --D14, HPC_LA09_P; B30 --CSI C
    en_mipi_out_clock_vadj :  out std_logic := '0'; --D15, HPC_LA09_N; A30 --CSI D
@@ -225,21 +216,6 @@ COMPONENT selectio_serdes is
 END COMPONENT;  
 
 
-COMPONENT I2C_SLAVE_TOP is
-		port(
-    clk_10MHz : in std_logic;  
-    rst : in std_logic; -- AB7 use CPU_RESET button        
-    SCL        : inout    std_logic;
-    SDA        : inout    std_logic;
-       --debug IO              
-    --leds_debug : out std_logic_vector(7 downto 0) := (others => '0') --debug
-    EEPROM_ACTIVE : out std_logic;
-    OV_ACTIVE : out std_logic;
-    start_activated_by_i2c  : out std_logic
-    );
-END COMPONENT;
-
-
 constant COUNTER_WIDTH : integer := 11; --max 2047*10ns(100Mhz clock) = 204.7 us delay
 constant SLOW_COUNTER_WIDTH: integer := 11;
 COMPONENT counter is GENERIC(n: natural :=COUNTER_WIDTH);
@@ -272,16 +248,11 @@ signal clk_slow_counter :std_logic;
 
 --For serdes
 signal parallel_data_to_serdes :  STD_LOGIC_VECTOR ( 31 downto 0 ); --parallel data in
---Outputs
-signal eeprom_active : std_logic;
-signal ov_active : std_logic;
 
 --For SelectIO
 signal data_out_to_pins_p : STD_LOGIC_VECTOR ( 1 downto 0 );
 signal data_out_to_pins_n :  STD_LOGIC_VECTOR ( 1 downto 0 );
 signal data_out_from_device : STD_LOGIC_VECTOR (15 downto 0 );
-
-signal start_activated_by_i2c : std_logic;  
 
 --AXI control/status
 constant REG_CONTROL_ADDR                 : std_logic_vector(7 downto 0) := x"00";
@@ -685,22 +656,6 @@ port map (
 --  O  => clk_200Mhz
 --);
 
-i2c_slave: I2C_SLAVE_TOP
-		PORT MAP (
-    clk_10MHz => clk_10MHz,
-    rst =>  rst,     
-    SCL  => i2c_cam_clk,
-    SDA  => i2c_cam_dat,
-       --debug IO              
-    --leds_debug => open
-    eeprom_active => eeprom_active, 
-    ov_active =>  ov_active,
-    start_activated_by_i2c => start_activated_by_i2c
-    );
-
-
-
-
 clock_network :  clock_wizard
   PORT MAP (
     --Clock in ports
@@ -774,14 +729,14 @@ frame_gen: send_single_frame
      
             
 rst <= not locked; --hold all the system on reset while clocks are not locked 
-  send_frame_legacy_pulse <= '1' when (counter_value < "0000000011" and rst = '0' and (GPIO_SW_C = '1' or start_activated_by_i2c = '1' or slow_counter_value > "0111111111")) else '0';
+  send_frame_legacy_pulse <= '1' when (counter_value < "0000000011" and rst = '0' and (GPIO_SW_C = '1' or slow_counter_value > "0111111111")) else '0';
   send_frame <= send_frame_axi_pulse or (send_frame_legacy_pulse and cfg_control_sync(3));
   stop_frame_ctrl <= cfg_control_sync(1);
 --send_frame <=  '1' when (counter_value < "0000001100" and rst = '0') else '0'; --400 MHz
 
-leds_debug(0) <= start_activated_by_i2c;
-leds_debug(1) <= eeprom_active;
-leds_debug(2) <= ov_active;
+leds_debug(0) <= send_frame_axi_pulse;
+leds_debug(1) <= irq;
+leds_debug(2) <= cfg_control_sync(3);
 leds_debug(3) <= '1';
 leds_debug(4) <= monitor_1p2v;
 leds_debug(5) <= monitor_1p8v;
@@ -792,11 +747,6 @@ dbg_io_1   <= monitor_1p8v;
 dbg_io_2   <= send_frame;
 dbg_io_3   <= frame_done;
            
-i2c_cam_dat <= 'Z';
-i2c2_cam_dat <= 'Z';
-i2c3_cam_dat <= 'Z';
-
-
 --HS Lanes
 
 parallel_data_to_serdes(7  downto 0)  <= csi_hs_data_1_out;

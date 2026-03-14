@@ -88,55 +88,17 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
- "[file normalize "$origin_dir/hdl/i2c/sp64Kx8.vhd"]"\
- "[file normalize "$origin_dir/hdl/i2c/sp256x8_e57.vhd"]"\
- "[file normalize "$origin_dir/hdl/i2c/sp256x8_e56.vhd"]"\
- "[file normalize "$origin_dir/hdl/i2c/sp256x8_e55.vhd"]"\
- "[file normalize "$origin_dir/hdl/i2c/sp256x8_e54.vhd"]"\
- "[file normalize "$origin_dir/hdl/i2c/i2cslave.vhd"]"\
  "[file normalize "$origin_dir/hdl/counter.vhd"]"\
  "[file normalize "$origin_dir/hdl/common.vhd"]"\
  "[file normalize "$origin_dir/hdl/one_lane_D_PHY.vhd"]"\
- "[file normalize "$origin_dir/hdl/i2c/i2c_mux.vhd"]"\
  "[file normalize "$origin_dir/hdl/gen_hs_lanes_stream.vhd"]"\
  "[file normalize "$origin_dir/hdl/colorbar_line_generator_raw10.vhd"]"\
- "[file normalize "$origin_dir/hdl/i2c/i2c_slave_top.vhd"]"\
  "[file normalize "$origin_dir/hdl/send_single_frame.vhd"]"\
  "[file normalize "$origin_dir/hdl/fmc_mipi_top.vhd"]"\
 ]
 add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset file properties for remote files
-set file "$origin_dir/hdl/i2c/sp64Kx8.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/hdl/i2c/sp256x8_e57.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/hdl/i2c/sp256x8_e56.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/hdl/i2c/sp256x8_e55.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/hdl/i2c/sp256x8_e54.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/hdl/i2c/i2cslave.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
 set file "$origin_dir/hdl/counter.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
@@ -152,22 +114,12 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/hdl/i2c/i2c_mux.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
 set file "$origin_dir/hdl/gen_hs_lanes_stream.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/hdl/colorbar_line_generator_raw10.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/hdl/i2c/i2c_slave_top.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
