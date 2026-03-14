@@ -20,7 +20,7 @@ int main(void)
     mipi_csi2_get_default_config(&cfg);
 
     /* Customize runtime stream parameters from software. */
-    cfg.n_mipi_lanes = 2u;
+    cfg.n_mipi_lanes = 4u;
     cfg.pixels_per_line = 3240u;
     cfg.n_lines = 1944u;
     cfg.data_type = MIPI_CSI2_DT_RAW10;

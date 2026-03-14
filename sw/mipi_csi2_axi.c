@@ -19,6 +19,21 @@ static uint32_t ctrl_mask_bit(uint32_t bit)
     return (1u << bit);
 }
 
+static uint32_t encode_lane_count(uint8_t n_mipi_lanes)
+{
+    switch (n_mipi_lanes) {
+    case 1u:
+        return MIPI_CSI2_REG_LANES_1;
+    case 2u:
+        return MIPI_CSI2_REG_LANES_2;
+    case 3u:
+    case 4u:
+        return MIPI_CSI2_REG_LANES_4;
+    default:
+        return MIPI_CSI2_REG_LANES_2;
+    }
+}
+
 uint32_t mipi_csi2_read_reg(const mipi_csi2_axi_t *dev, uint32_t offset)
 {
     return mmio_read32(dev->base_addr + offset);
@@ -58,7 +73,7 @@ void mipi_csi2_apply_config(const mipi_csi2_axi_t *dev, const mipi_csi2_config_t
     uint32_t control = 0u;
     uint32_t type_vc = 0u;
 
-    mipi_csi2_write_reg(dev, MIPI_CSI2_REG_N_MIPI_LANES, (uint32_t)(cfg->n_mipi_lanes & 0x03u));
+    mipi_csi2_write_reg(dev, MIPI_CSI2_REG_N_MIPI_LANES, encode_lane_count(cfg->n_mipi_lanes));
     mipi_csi2_write_reg(dev, MIPI_CSI2_REG_PIXELS_PER_LINE, cfg->pixels_per_line);
     mipi_csi2_write_reg(dev, MIPI_CSI2_REG_N_LINES, cfg->n_lines);
 

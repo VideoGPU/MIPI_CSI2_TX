@@ -54,12 +54,20 @@ enum {
     MIPI_CSI2_DT_RAW10       = 0x2Bu,
 };
 
+/* Runtime lane configuration limits and register encoding. */
+enum {
+    MIPI_CSI2_MAX_N_MIPI_LANES      = 4u,
+    MIPI_CSI2_REG_LANES_1           = 0x01u,
+    MIPI_CSI2_REG_LANES_2           = 0x02u,
+    MIPI_CSI2_REG_LANES_4           = 0x03u,
+};
+
 typedef struct {
     uintptr_t base_addr;
 } mipi_csi2_axi_t;
 
 typedef struct {
-    uint8_t n_mipi_lanes;  /* Runtime lane request: 1, 2, or 3(=4 lanes). */
+    uint8_t n_mipi_lanes;  /* Runtime lane count: 1, 2, or 4. */
     uint16_t pixels_per_line;
     uint16_t n_lines;
     uint8_t data_type;     /* 6-bit value. */

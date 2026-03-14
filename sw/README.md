@@ -32,7 +32,7 @@ Files:
 
 - `CONTROL` writes update bits `[5:1]` in hardware, so the driver always does read-modify-write for `start`, `stop`, and IRQ clear.
 - `start` is a pulse command (bit0). The hardware commits synchronized runtime config at start edge.
-- `N_MIPI_LANES` is configured at `0x40` (lower 2 bits): `1`, `2`, or `3` (mapped to 4 lanes).
+- `N_MIPI_LANES` is configured at `0x40`; the driver API uses lane counts `1`, `2`, or `4` and encodes register values internally.
 - `gen_hs_lanes_stream` now handles 1/2/4 lane packetization paths.
-- Current `fmc_mipi_top` pinout still exposes CSI-C (two physical data lanes), so 4-lane mode is mainly for core-level integration unless top-level IO is extended.
+- `fmc_mipi_top` now exposes 4 HS data lane pairs (`d0..d3`) and corresponding LP outputs.
 - The MMIO helpers in `mipi_csi2_axi.c` are generic; replace with your BSP primitives if needed.
